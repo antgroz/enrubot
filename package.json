@@ -1,7 +1,7 @@
 {
   "name": "enrubot",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.1.0",
+  "description": "A telegram bot that corrects the keyboard layout of messages",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -11,6 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "telegraf": "^3.33.3"
+    "telegraf": "^3.33.3",
+    "wordlist-english": "^1.2.1",
+    "wordlist-russian": "^1.0.0"
   }
 }
