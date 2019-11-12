@@ -95,4 +95,4 @@ bot.on('message', (ctx) => {
 });
 
 bot.telegram.setWebhook('https://enrubot.herokuapp.com/');
-bot.startWebhook('/secret-path', null, 5000);
+bot.startWebhook('/secret-path', null, process.env.PORT);
