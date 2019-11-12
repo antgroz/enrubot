@@ -44,7 +44,7 @@ const EN = new Lang(enKeys, enDict);
 
 // Useful functions
 
-const notWordRegEx = new RegExp('(?![-А-я ])');
+const notWordRegEx = new RegExp('[^-А-я ]');
 
 function layoutSwitch(input) {
     return input
