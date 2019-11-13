@@ -44,7 +44,7 @@ const EN = new Lang(enKeys, enDict);
 
 // Useful functions
 
-const notWordRegEx = new RegExp('[^-А-я ]');
+// const notWordRegEx = new RegExp('[^-А-я ]');
 
 function layoutSwitch(input) {
     return input
@@ -57,13 +57,14 @@ function layoutSwitch(input) {
 function words(text) {
     return text
         .toLocaleLowerCase(['en', 'ru'])
-        .replace(notWordRegEx, '')
+        // .replace(notWordRegEx, '')
         .split(' ');
 }
 
 // Telegram bot
 
 const token = process.env.BOT_TOKEN;
+// const token = '872047189:AAHnlSkBO_lttaxCUmWdb5nBZkXyde8UjTw';
 const bot = new Telegraph(token);
 
 bot.on('inline_query', (ctx) => {
@@ -103,6 +104,36 @@ bot.help((ctx) => {
         '/switch');
 });
 
+validation = (words) => {
+    const thresh = 20;
+    const lenParam = 3;
+    let bool = false;
+    if (words.length > thresh) {
+        for (let i = 0; i < thresh; ++i) {
+            let t = words[Math.floor(Math.random() * words.length)];
+            if (t.length <= lenParam || EN.dict.indexOf(t) === -1) {
+                bool = bool || false;
+            }
+            else {
+                bool = bool || true;
+                break;
+            }
+        }
+    }
+    else {
+        for (const t of words) {
+            if (t.length <= lenParam || EN.dict.indexOf(t) === -1) {
+                bool = bool || false;
+            }
+            else {
+                bool = bool || true;
+                break;
+            }
+        }
+    }
+    return bool;
+};
+
 const ruRegEx = new RegExp('[А-я]');
 
 bot.on('message', (ctx) => {
@@ -123,27 +154,21 @@ bot.on('message', (ctx) => {
             msg = ctx.message.text;
             const onlyEn = !ruRegEx.test(msg);
             if (onlyEn) {
-                let isValid = false;
                 const msgWords = words(msg);
-                for (const element of msgWords) {
-                    if (EN.dict.indexOf(element) !== -1 && element.length >= 3) {
-                        isValid = true;
-                        break;
-                    }
-                }
+                const isValid = validation(msgWords);
                 if (!isValid) {
-                    const mapped = layoutSwitch(msg);
-                    const mapWords = words(mapped);
-                    let match = false;
-                    for (const element of mapWords) {
-                        if (RU.dict.indexOf(element) !== -1 && element.length >= 3) {
-                            match = true;
-                            break;
-                        }
-                    }
-                    if (match) {
-                        ctx.telegram.sendMessage(chatId, mapped, {reply_to_message_id: msgId});
-                    }
+                    // const mapped = layoutSwitch(msg);
+                    // const mapWords = words(mapped);
+                    // let match = false;
+                    // for (const element of mapWords) {
+                    //     if (RU.dict.indexOf(element) !== -1 && element.length >= 3) {
+                    //         match = true;
+                    //         break;
+                    //     }
+                    // }
+                    // if (match) {
+                        ctx.telegram.sendMessage(chatId, layoutSwitch(msg), {reply_to_message_id: msgId});
+                    // }
                 }
             }
         }
@@ -152,3 +177,4 @@ bot.on('message', (ctx) => {
 
 bot.telegram.setWebhook('https://enrubot.herokuapp.com/');
 bot.startWebhook('/', null, process.env.PORT);
+// bot.launch();
