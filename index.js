@@ -94,22 +94,23 @@ let msgTracker = {},
 bot.command('/switch', async (ctx) => {
     const chatId = ctx.chat.id;
     msgTracker[chatId] = ctx.message.message_id;
-    const sent = await ctx.reply('Send a message for correction or reply to anything you would like to correct');
+    const sent = await bot.telegram.sendMessage(chatId,'Send a message for correction or reply to anything ' +
+        'you would like to correct');
     lastTracker[chatId] = sent.message_id;
 });
 
 bot.command('/start', async (ctx) => {
     const chatId = ctx.chat.id;
-    const sent = await ctx.reply('Hi! I will automatically correct the keyboard layout of all the messages ' +
-        'here. To know more, send /help');
+    const sent = await bot.telegram.sendMessage(chatId,'Hi! I will automatically correct the keyboard layout ' +
+        'of all the messages here. To know more, send /help');
     onTracker[chatId] = true;
     lastTracker[chatId] = sent.message_id;
 });
 
 bot.help(async (ctx) => {
     const chatId = ctx.chat.id;
-    const sent = await ctx.reply('I can only do one thing. I correct messages by switching their keyboard ' +
-        'layout. Here are the commands:\n\n/on Turn the automatic correction mode on\n/off ' +
+    const sent = await bot.telegram.sendMessage(chatId,'I can only do one thing. I correct messages by switching ' +
+        'their keyboard layout. Here are the commands:\n\n/on Turn the automatic correction mode on\n/off ' +
         'Turn the automatic correction mode off\n/switch Initiate a dialog with me to manually correct a message\n' +
         '/delete Instruct me to remove my last immediate message here\n/help Display this message');
     lastTracker[chatId] = sent.message_id;
@@ -120,30 +121,26 @@ bot.command('/on', async (ctx) => {
     onTracker[chatId] = true;
     const sent = await bot.telegram.sendMessage(chatId,'Automatic mode is `on`. Now go on and flood',
         {parse_mode: "Markdown"});
-    console.log(sent);
     lastTracker[chatId] = sent.message_id;
-    console.log(lastTracker[chatId]);
 });
 
 bot.command('/off', async (ctx) => {
     const chatId = ctx.chat.id;
     onTracker[chatId] = false;
-    const sent = await ctx.telegram.sendMessage(chatId,'Automatic mode is `off`. I\'m tired',
+    const sent = await bot.telegram.sendMessage(chatId,'Automatic mode is `off`. I\'m tired',
         {parse_mode: "Markdown"});
     lastTracker[chatId] = sent.message_id;
 });
 
 bot.command('/delete', async (ctx) => {
     const chatId = ctx.chat.id;
-    console.log(ctx.message.message_id);
     if (lastTracker.hasOwnProperty(chatId)) {
         if (ctx.message.message_id === lastTracker[chatId] + 1) {
-            const del = await ctx.telegram.deleteMessage(chatId,lastTracker[chatId]);
-            console.log(del);
+            const del = await bot.telegram.deleteMessage(chatId,lastTracker[chatId]);
         }
     }
     else {
-        const sent = await ctx.reply('This is my first message here that I know of');
+        const sent = await bot.telegram.sendMessage(chatId,'This is my first message here that I know of');
         lastTracker[chatId] = sent.message_id;
     }
 });
@@ -192,7 +189,7 @@ bot.on('message', async (ctx) => {
                 msg = ctx.message.text;
             }
             const mapped = layoutSwitch(msg);
-            const sent = await ctx.telegram.sendMessage(chatId, mapped, {reply_to_message_id: msgId});
+            const sent = await bot.telegram.sendMessage(chatId, mapped, {reply_to_message_id: msgId});
             lastTracker[chatId] = sent.message_id;
         }
         else if (onTracker[chatId]) {
@@ -212,7 +209,7 @@ bot.on('message', async (ctx) => {
                     //     }ow go on and flood
                     // }
                     // if (match) {
-                        const sent = await ctx.telegram.sendMessage(chatId, layoutSwitch(msg),
+                        const sent = await bot.telegram.sendMessage(chatId, layoutSwitch(msg),
                             {reply_to_message_id: msgId});
                         lastTracker[chatId] = sent.message_id;
                     // }
