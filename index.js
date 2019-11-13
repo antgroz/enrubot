@@ -65,7 +65,7 @@ function words(text) {
 
 const token = process.env.BOT_TOKEN;
 // const token = '872047189:AAHnlSkBO_lttaxCUmWdb5nBZkXyde8UjTw';
-const bot = new Telegraph(token);
+const bot = new Telegraph(token,{telegram: {webhookReply: true}});
 
 bot.on('inline_query', (ctx) => {
     const query = ctx.inlineQuery.query;
