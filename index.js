@@ -136,7 +136,7 @@ bot.command('/delete', async (ctx) => {
     const chatId = ctx.chat.id;
     console.log(ctx.message.message_id);
     if (lastTracker.hasOwnProperty(chatId)) {
-        if (ctx.message.message_id === lastTracker[chatId] + 1) {
+        if (ctx.message.message_id == lastTracker[chatId] + 1) {
             const del = await ctx.telegram.deleteMessage(chatId,lastTracker[chatId]);
             console.log(del);
         }
