@@ -135,7 +135,7 @@ bot.command('/delete', async (ctx) => {
     const chatId = ctx.chat.id;
     if (lastTracker.hasOwnProperty(chatId)) {
         if (ctx.message.message_id === lastTracker[chatId] + 1) {
-            bot.telegram.deleteMessage(chatId,lastTracker[chatId]);
+            await ctx.telegram.deleteMessage(chatId,lastTracker[chatId]);
         }
     }
     else {
@@ -220,3 +220,4 @@ bot.on('message', async (ctx) => {
 
 bot.telegram.setWebhook('https://enrubot.herokuapp.com/');
 bot.startWebhook('/', null, process.env.PORT);
+// bot.launch();
