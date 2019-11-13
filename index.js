@@ -118,7 +118,7 @@ bot.help(async (ctx) => {
 bot.command('/on', async (ctx) => {
     const chatId = ctx.chat.id;
     onTracker[chatId] = true;
-    const sent = await ctx.telegram.sendMessage(chatId,'Automatic mode is `on`. Now go on and flood',
+    const sent = await bot.telegram.sendMessage(chatId,'Automatic mode is `on`. Now go on and flood',
         {parse_mode: "Markdown"});
     console.log(sent);
     lastTracker[chatId] = sent.message_id;
