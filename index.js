@@ -121,6 +121,7 @@ bot.command('/on', async (ctx) => {
     const sent = await ctx.telegram.sendMessage(chatId,'Automatic mode is `on`. Now go on and flood',
         {parse_mode: "Markdown"});
     lastTracker[chatId] = sent.message_id;
+    console.log(lastTracker[chatId]);
 });
 
 bot.command('/off', async (ctx) => {
@@ -133,9 +134,11 @@ bot.command('/off', async (ctx) => {
 
 bot.command('/delete', async (ctx) => {
     const chatId = ctx.chat.id;
+    console.log(ctx.message.message_id);
     if (lastTracker.hasOwnProperty(chatId)) {
         if (ctx.message.message_id === lastTracker[chatId] + 1) {
-            await ctx.telegram.deleteMessage(chatId,lastTracker[chatId]);
+            const del = await ctx.telegram.deleteMessage(chatId,lastTracker[chatId]);
+            console.log(del);
         }
     }
     else {
