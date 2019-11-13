@@ -63,8 +63,8 @@ function words(text) {
 
 // Telegram bot
 
-// const token = process.env.BOT_TOKEN;
-const token = '872047189:AAHnlSkBO_lttaxCUmWdb5nBZkXyde8UjTw';
+const token = process.env.BOT_TOKEN;
+// const token = '872047189:AAHnlSkBO_lttaxCUmWdb5nBZkXyde8UjTw';
 const bot = new Telegraph(token);
 
 bot.on('inline_query', (ctx) => {
@@ -218,6 +218,5 @@ bot.on('message', async (ctx) => {
     }
 });
 
-// bot.telegram.setWebhook('https://enrubot.herokuapp.com/');
-// bot.startWebhook('/', null, process.env.PORT);
-bot.launch();
+bot.telegram.setWebhook('https://enrubot.herokuapp.com/');
+bot.startWebhook('/', null, process.env.PORT);
