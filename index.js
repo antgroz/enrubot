@@ -1,6 +1,6 @@
 const Telegraph = require('telegraf');
 const enDict = require('wordlist-english')['english'];
-const ruDict = require('wordlist-russian')['russian'];
+// const ruDict = require('wordlist-russian')['russian'];
 
 // Languages
 
@@ -39,7 +39,7 @@ class Lang {
 const enKeys = '`~1!2@3#4$5%6^7&8*9(0)-_=+qQwWeErRtTyYuUiIoOpP[{]}aAsSdDfFgGhHjJkKlL;:\'\"\\|zZxXcCvVbBnNmM,<.>/?'
     , ruKeys = 'ёЁ1!2"3№4;5%6:7?8*9(0)-_=+йЙцЦуУкКеЕнНгГшШщЩзЗхХъЪфФыЫвВаАпПрРоОлЛдДжЖэЭ\\/яЯчЧсСмМиИтТьЬбБюЮ.,';
 
-const RU = new Lang(ruKeys, ruDict);
+const RU = new Lang(ruKeys, );
 const EN = new Lang(enKeys, enDict);
 
 // Useful functions
@@ -63,8 +63,8 @@ function words(text) {
 
 // Telegram bot
 
-const token = process.env.BOT_TOKEN;
-// const token = '872047189:AAHnlSkBO_lttaxCUmWdb5nBZkXyde8UjTw';
+// const token = process.env.BOT_TOKEN;
+const token = '872047189:AAHnlSkBO_lttaxCUmWdb5nBZkXyde8UjTw';
 const bot = new Telegraph(token);
 
 bot.on('inline_query', (ctx) => {
@@ -87,21 +87,61 @@ bot.on('inline_query', (ctx) => {
 });
 
 
-let msgTracker = {};
+let msgTracker = {},
+    onTracker = {},
+    lastTracker = {};
 
-bot.command('/switch', (ctx) => {
-    msgTracker[ctx.chat.id] = ctx.message.message_id;
-    ctx.reply('Send a message for correction or reply to anything you would like to correct');
+bot.command('/switch', async (ctx) => {
+    const chatId = ctx.chat.id;
+    msgTracker[chatId] = ctx.message.message_id;
+    const sent = await ctx.reply('Send a message for correction or reply to anything you would like to correct');
+    lastTracker[chatId] = sent.message_id;
 });
 
-bot.command('/start', (ctx) => {
-    ctx.reply('Hi! I will automatically correct the keyboard layout of all the messages here. You can also use' +
-        '/switch to ask me to correct anything without analyzing the text');
+bot.command('/start', async (ctx) => {
+    const chatId = ctx.chat.id;
+    const sent = await ctx.reply('Hi! I will automatically correct the keyboard layout of all the messages ' +
+        'here. To know more, send /help');
+    onTracker[chatId] = true;
+    lastTracker[chatId] = sent.message_id;
 });
 
-bot.help((ctx) => {
-    ctx.reply('I can only do one thing. I correct messages by switching their keyboard, automatically or with a' +
-        '/switch');
+bot.help(async (ctx) => {
+    const chatId = ctx.chat.id;
+    const sent = await ctx.reply('I can only do one thing. I correct messages by switching their keyboard ' +
+        'layout. Here are the commands:\n\n/on Turn the automatic correction mode on\n/off ' +
+        'Turn the automatic correction mode off\n/switch Initiate a dialog with me to manually correct a message\n' +
+        '/delete Instruct me to remove my last immediate message here\n/help Display this message');
+    lastTracker[chatId] = sent.message_id;
+});
+
+bot.command('/on', async (ctx) => {
+    const chatId = ctx.chat.id;
+    onTracker[chatId] = true;
+    const sent = await ctx.telegram.sendMessage(chatId,'Automatic mode is `on`. Now go on and flood',
+        {parse_mode: "Markdown"});
+    lastTracker[chatId] = sent.message_id;
+});
+
+bot.command('/off', async (ctx) => {
+    const chatId = ctx.chat.id;
+    onTracker[chatId] = false;
+    const sent = await ctx.telegram.sendMessage(chatId,'Automatic mode is `off`. I\'m tired',
+        {parse_mode: "Markdown"});
+    lastTracker[chatId] = sent.message_id;
+});
+
+bot.command('/delete', async (ctx) => {
+    const chatId = ctx.chat.id;
+    if (lastTracker.hasOwnProperty(chatId)) {
+        if (ctx.message.message_id === lastTracker[chatId] + 1) {
+            bot.telegram.deleteMessage(chatId,lastTracker[chatId]);
+        }
+    }
+    else {
+        const sent = await ctx.reply('This is my first message here that I know of');
+        lastTracker[chatId] = sent.message_id;
+    }
 });
 
 validation = (words) => {
@@ -136,7 +176,7 @@ validation = (words) => {
 
 const ruRegEx = new RegExp('[А-я]');
 
-bot.on('message', (ctx) => {
+bot.on('message', async (ctx) => {
     if (typeof ctx.message.text !== 'undefined') {
         const chatId = ctx.chat.id;
         const msgId = ctx.message.message_id;
@@ -148,9 +188,10 @@ bot.on('message', (ctx) => {
                 msg = ctx.message.text;
             }
             const mapped = layoutSwitch(msg);
-            ctx.telegram.sendMessage(chatId, mapped, {reply_to_message_id: msgId});
+            const sent = await ctx.telegram.sendMessage(chatId, mapped, {reply_to_message_id: msgId});
+            lastTracker[chatId] = sent.message_id;
         }
-        else {
+        else if (onTracker[chatId]) {
             msg = ctx.message.text;
             const onlyEn = !ruRegEx.test(msg);
             if (onlyEn) {
@@ -164,10 +205,12 @@ bot.on('message', (ctx) => {
                     //     if (RU.dict.indexOf(element) !== -1 && element.length >= 3) {
                     //         match = true;
                     //         break;
-                    //     }
+                    //     }ow go on and flood
                     // }
                     // if (match) {
-                        ctx.telegram.sendMessage(chatId, layoutSwitch(msg), {reply_to_message_id: msgId});
+                        const sent = await ctx.telegram.sendMessage(chatId, layoutSwitch(msg),
+                            {reply_to_message_id: msgId});
+                        lastTracker[chatId] = sent.message_id;
                     // }
                 }
             }
@@ -175,6 +218,6 @@ bot.on('message', (ctx) => {
     }
 });
 
-bot.telegram.setWebhook('https://enrubot.herokuapp.com/');
-bot.startWebhook('/', null, process.env.PORT);
-// bot.launch();
+// bot.telegram.setWebhook('https://enrubot.herokuapp.com/');
+// bot.startWebhook('/', null, process.env.PORT);
+bot.launch();
